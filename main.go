@@ -87,7 +87,7 @@ func findOrCreateIssueComment(ghAccessToken, owner, repo, commentIncludes, messa
 			break
 		}
 	}
-	message = commentIncludes + message
+	message = message + commentIncludes
 
 	if foundComment != nil {
 		_, _, err = client.Issues.EditComment(ctx, owner, repo, *foundComment.ID, &github.IssueComment{Body: &message})
