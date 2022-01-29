@@ -39,28 +39,28 @@ func main() {
 	flag.Parse()
 
 	if prNum == 0 {
-		fmt.Println("You must specify the pull request ID using the -pr-id argument")
+		fmt.Println("Please specify the pull request ID using the -pr-id argument")
 		os.Exit(1)
 	}
 	if owner == "" {
-		fmt.Println("You must specify the repo owner with the -owner argument")
+		fmt.Println("Please specify the repo owner with the -owner argument")
 		os.Exit(1)
 	}
 
 	if repo == "" {
-		fmt.Println("You must specify the repo with the -repo flag")
+		fmt.Println("Please specify the repo with the -repo flag")
 		os.Exit(1)
 	}
 
 	if message == "" {
-		fmt.Println("You must supply a message with the -message flag")
+		fmt.Println("Please supply a message with the -message flag")
 		os.Exit(1)
 	}
 
-	fmt.Println(message)
 	err := findOrCreateIssueComment(ghAccessToken, owner, repo, commentIncludes, message, prNum)
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		os.Exit(1)
 	}
 
 }
@@ -77,7 +77,7 @@ func findOrCreateIssueComment(ghAccessToken, owner, repo, commentIncludes, messa
 	comments, _, err := client.Issues.ListComments(ctx, owner, repo, prNum, &github.IssueListCommentsOptions{})
 
 	if err != nil {
-		return err
+		return fmt.Errorf("Error retrieving existing comments: %w", err)
 	}
 
 	var foundComment *github.IssueComment
@@ -92,13 +92,15 @@ func findOrCreateIssueComment(ghAccessToken, owner, repo, commentIncludes, messa
 	if foundComment != nil {
 		_, _, err = client.Issues.EditComment(ctx, owner, repo, *foundComment.ID, &github.IssueComment{Body: &message})
 		if err != nil {
-			return err
+			return fmt.Errorf("Error editing comment: %w", err)
 		}
+		fmt.Println("Comment found and edited")
 	} else {
 		_, _, err = client.Issues.CreateComment(ctx, owner, repo, prNum, &github.IssueComment{Body: &message})
 		if err != nil {
-			return err
+			return fmt.Errorf("Error creating comment: %w", err)
 		}
+		fmt.Println("Comment created")
 	}
 
 	return nil
